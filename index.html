@@ -9,6 +9,16 @@
 </head>
 <body>
 	<div class="container">
+		<div class="filter">
+			<h2>LTP: </h2><input class="ltp_min" type="number" value="5"><input class="ltp_max" type="number" value="50">
+			<br>
+			<h2>CHANGE(%): </h2><input class="change_min" type="number" value="3"><input class="change_max" type="number" value="6">
+			<br>
+			<h2>VOLUME: </h2><input class="volume_min" type="number" value="100000"><input class="volume_max" type="number" value="10000000000">
+			<br>
+			<h2 class="filter_results">Show Filtered results</h2>
+			<br>
+		</div>
 		<div class="dse">
 			<table>
 				<tr>
@@ -20,6 +30,7 @@
 					<th>CLOSEP</th>
 					<th>YCP</th>
 					<th>CHANGE</th>
+					<th>CHANGE(%)</th>
 					<th>TRADE</th>
 					<th>VALUE(mn)</th>
 					<th>VOLUME</th>

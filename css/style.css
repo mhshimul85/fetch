@@ -18,3 +18,8 @@ table {
   tr:nth-child(even) {
     background-color: #dddddd;
   }
+
+  input{
+    padding: 5px 10px;
+    margin-right: 5px;
+  }
