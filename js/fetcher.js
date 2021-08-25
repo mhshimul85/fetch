@@ -40,16 +40,34 @@ const fetchDataFromUrl = async (uri, selector) => {
 let data = [];
 
 async function dse_all() {
+  
   let tr = await fetchDataFromUrl(
     "https://www.dsebd.org/latest_share_price_scroll_by_value.php",
     ".shares-table > tbody"
   );
 
+  // let tr = await fetchDataFromUrl(
+  //   "https://dsebd.org/day_end_archive.php?startDate=2021-08-23&endDate=2021-08-23&inst=All%20Instrument&archive=data",
+  //   ".shares-table > tbody"
+  // );
+
+    // let tr = await fetchDataFromUrl(
+    //   "https://investing.com/equities/first-janata-bank-fund-technical",
+    //   // "#techinalContent > .float_lang_base_1 > .technicalIndicatorsTbl > tbody"
+    //   ".genTbl .closedTbl .technicalIndicatorsTbl .smallTbl .float_lang_base_1 > tbody"
+    // );
+
+    // console.log(tr);
   // let data = [];
   if (tr.length > 0) {
     for (let i = 0; i <= tr.length - 1; i++) {
       let td = tr[i].querySelectorAll("td");
       
+      // let obj = {
+      //   indicator: td[0].innerText.replaceAll(/\s/g,''),
+      //   value: Number(td[1].innerText.replaceAll(/,/g,''))
+      // }
+
       let obj = {
         no: Number(td[0].innerText.replaceAll(/,/g,'')),
         tradingCode: td[1].innerText.replaceAll(/\s/g,''),
@@ -64,6 +82,7 @@ async function dse_all() {
         value: Number(td[9].innerText.replaceAll(/,/g,'')),
         volume: Number(td[10].innerText.replaceAll(/,/g,''))
       };
+
       data.push(obj);
     }
   } else {
@@ -71,6 +90,8 @@ async function dse_all() {
       "something wrong!"
     );
   }
+
+
   // console.log(data)
   // return data;
 
@@ -116,6 +137,8 @@ async function dse_all() {
 
 dse_all();
 
+// console.log(data)
+
 // $(function(){
 
   // $('.filter_results').click(function(){
@@ -131,3 +154,84 @@ dse_all();
   // })
 
 // })
+
+
+function ema(previous_ema, ltp, period){
+  return (ltp * (2 / (period + 1))) + (previous_ema * (1 - (2 / (period + 1))));
+}
+
+function macd(ema_12, ema_26, previous_signal, previous_histogram){
+  let direction;
+  let macd      = ema_12 - ema_26;
+  let signal    = ema(previous_signal, macd, 9);
+  let histogram = macd - signal;
+
+  if(histogram > previous_histogram){
+    direction = 'up'
+  }else if(histogram < previous_histogram){
+    direction = 'down'
+  }else if(histogram === previous_histogram){
+    direction = 'nutral'
+  }
+
+  return {
+    macd      : macd,
+    signal    : signal,
+    histogram : histogram,
+    direction : direction
+  }
+}
+
+function rsi(gain_or_loss, previous_gain_ema, previous_loss_ema, previous_rsi){
+  let gain_ema, loss_ema, rs, rsi, direction, period = 14;
+
+  if(gain_or_loss > 0){
+    gain_ema = ema(previous_gain_ema, Math.abs(gain_or_loss), period);
+    loss_ema = ema(previous_loss_ema, 0, period);
+  }else if(gain_or_loss < 0){
+    gain_ema = ema(previous_gain_ema, 0, period);
+    loss_ema = ema(previous_loss_ema, Math.abs(gain_or_loss), period)
+  }else if(gain_or_loss === 0){
+    gain_ema = ema(previous_gain_ema, 0, period);
+    loss_ema = ema(previous_loss_ema, 0, period);
+  }
+
+  rs  = gain_ema / loss_ema;
+  rsi = 100 - (100 / (1 + rs));
+
+  if(rsi > previous_rsi){
+    direction = 'up'
+  }else if(rsi < previous_rsi){
+    direction = 'down'
+  }else if(rsi === previous_rsi){
+    direction = 'nutral'
+  }
+
+  return {
+    gain_ema  : gain_ema,
+    loss_ema  : loss_ema,
+    rsi       : rsi,
+    direction : direction
+  }
+}
+
+function atr(previous_atr, high, low, previous_closing){
+  let tr, atr, direction, period = 14;
+
+  tr = Math.max(high - low, Math.abs(high - previous_closing), Math.abs(low - previous_closing));
+  atr = ((previous_atr * (period - 1)) + tr) / period;
+
+  if(atr > previous_atr){
+    direction = 'up'
+  }else if(atr < previous_atr){
+    direction = 'down'
+  }else if(atr === previous_atr){
+    direction = 'nutral'
+  }
+
+  return {
+    atr       : atr,
+    direction : direction
+  }
+}
+
